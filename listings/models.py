@@ -27,15 +27,17 @@ class CreatedModifiedMixin(DirtyFieldsMixin, models.Model):
 class Listing(CreatedModifiedMixin, models.Model):
     # RSS listing fields
     title = models.CharField(max_length=255)
+    link = models.URLField(unique=True)
     description = models.TextField()
-    dol_id = models.CharField(max_length=255)
-    pub_date = models.DateTimeField(null=True)
+    dol_id = models.CharField(max_length=255, unique=True)
+    pub_date = models.DateField()
+    last_seen = models.DateTimeField(auto_now_add=True)
 
     # Has this listing been scraped?
     scraped = models.BooleanField(default=False)
 
     # Full job listing as scraped from SeasonalJobs API
-    scraped_data = models.JSONField()
+    scraped_data = models.JSONField(null=True)
 
     # Associated PDF
-    pdf = models.FileField(upload_to="job_pdfs/")
+    pdf = models.FileField(upload_to="job_pdfs/", null=True)

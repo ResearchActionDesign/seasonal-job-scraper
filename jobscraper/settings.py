@@ -45,3 +45,6 @@ DATABASES = {
         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
     }
 }
+
+# Seasonal jobs specific URLS
+JOBS_RSS_FEED_URL = "http://seasonaljobs.dol.gov/job_rss.xml"

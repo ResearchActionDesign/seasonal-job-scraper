@@ -12,6 +12,7 @@ django = "~=3.1a1"
 django-dirtyfields = "~=1.3"
 requests = "~=2.23"
 psycopg2 = "*"
+feedparser = "*"
 
 [requires]
 python_version = "3.8"
