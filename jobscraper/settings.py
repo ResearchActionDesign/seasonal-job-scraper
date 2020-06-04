@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -48,3 +51,6 @@ DATABASES = {
 
 # Seasonal jobs specific URLS
 JOBS_RSS_FEED_URL = "http://seasonaljobs.dol.gov/job_rss.xml"
+JOBS_API_URL = "https://foreign-labor.search.windows.net/indexes/foreign-labor/docs/search?api-version=2017-11-11"
+JOB_ORDER_BASE_URL = "https://seasonaljobs.dol.gov/job-order/"
+JOBS_API_KEY = os.getenv("JOBS_API_KEY", False)
