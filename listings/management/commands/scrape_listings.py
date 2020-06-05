@@ -18,8 +18,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "--max",
             type=int,
-            help="Max number of entries to process, defaults to 5",
-            default=5,
+            help="Max number of entries to process, defaults to 1",
+            default=1,
         )
 
     def handle(self, *args, **options):
@@ -83,13 +83,19 @@ class Command(BaseCommand):
                 f"{settings.JOB_ORDER_BASE_URL}{listing.dol_id}", headers=headers
             )
 
-            if job_order_pdf.status_code == 200:
+            if job_order_pdf.status_code in (200, 301):
                 listing.pdf = ContentFile(
-                    job_order_pdf.content, name="f{listing.dol_id}.pdf"
+                    job_order_pdf.content, name=f"{listing.dol_id}.pdf"
                 )
                 listing.save()
                 self.stdout.write(
                     self.style.SUCCESS(
                         f"{scraped_count} - Saved job order PDF for listing ID {listing.dol_id}"
+                    )
+                )
+            else:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"{scraped_count} - Failed job order PDF request for listing ID {listing.dol_id}"
                     )
                 )

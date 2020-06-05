@@ -19,6 +19,10 @@ load_dotenv(find_dotenv())
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def base_dir_join(*args):
+    return os.path.join(BASE_DIR, *args)
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
@@ -31,23 +35,22 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
-
 INSTALLED_APPS = ["listings"]
-
 MIDDLEWARE = []
-
 WSGI_APPLICATION = "jobscraper.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
     }
 }
+
+# Upload handling
+MEDIA_ROOT = base_dir_join("files")
 
 # Seasonal jobs specific URLS
 JOBS_RSS_FEED_URL = "https://seasonaljobs.dol.gov/job_rss.xml"

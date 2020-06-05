@@ -64,7 +64,6 @@ class TestScrapeListings(TestCase):
             out = StringIO()
             call_command("scrape_listings", stdout=out, max=1)
             mock_request_post.assert_called_once()
-            mock_request_get.assert_called_once()
             self.assertIn("H-1", out.getvalue())
             self.assertEqual(Listing.objects.filter(scraped=True).count(), 1)
             l = Listing.objects.get(dol_id="H-1")
@@ -73,5 +72,16 @@ class TestScrapeListings(TestCase):
             self.assertEqual(l.scraped_data["a_key"], "a value")
 
     def test_successfully_saves_pdf(self):
-        # TODO
-        pass
+        with patch("requests.post") as mock_request_post, patch(
+            "requests.get"
+        ) as mock_request_get:
+            mock_request_post.return_value = FakeResponse()
+            mock_request_get.return_value = FakeResponse()
+            out = StringIO()
+            call_command("scrape_listings", stdout=out, max=1)
+            mock_request_get.assert_called_once()
+            self.assertIn("Saved job order PDF", out.getvalue())
+            self.assertEqual(Listing.objects.filter(scraped=True).count(), 1)
+            l = Listing.objects.get(dol_id="H-1")
+            self.assertIsNotNone(l.pdf)
+            self.assertEqual(l.pdf.readline(), b"Some content")
