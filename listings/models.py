@@ -41,3 +41,12 @@ class Listing(CreatedModifiedMixin, models.Model):
 
     # Associated PDF
     pdf = models.FileField(upload_to="job_pdfs/", null=True)
+
+
+class StaticValue(models.Model):
+    """
+    Static value storage in the DB for between runs.
+    """
+
+    key = models.CharField(max_length=255, primary_key=True)
+    value = models.CharField(max_length=255, blank=True)
