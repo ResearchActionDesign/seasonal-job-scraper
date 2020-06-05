@@ -1,0 +1,62 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2.1
+jobs:
+  test:
+    docker:
+      # specify the version you desire here
+      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
+      - image: circleci/python:3.8.2
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Copy settings file
+      # - run: mv ./mi-para-ti/settings/circleci.py ./mi-para-ti/settings/local.py
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-python-packages-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+
+      - run:
+          name: install dependencies
+          command: |
+            pipenv sync --dev
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-python-packages-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+
+      - run:
+          name: Lint python code
+          command: pipenv run black --check .
+
+      # run tests!
+      # this example uses Django's built-in test-runner
+      # other common Python testing frameworks include pytest and nose
+      # https://pytest.org
+      # https://nose.readthedocs.io
+      - run:
+          name: Run Django tests
+          command: pipenv run python manage.py test --parallel
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - test
