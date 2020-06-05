@@ -19,9 +19,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--max",
-            nargs=1,
             type=int,
             help="Max number of entries to process, defaults to all",
+            default=-1,
         )
 
         parser.add_argument(
@@ -35,11 +35,11 @@ class Command(BaseCommand):
             raise CommandError("RSS feed URL must be set")
 
         max_records = None
-        if options["max"]:
-            max_records = options["max"][0]
+        if options.get("max", -1) != -1:
+            max_records = options["max"]
 
         update = True
-        if "skip_update" in options and options["skip_update"]:
+        if options.get("skip_update", False):
             update = False
 
         # Check for saved etag and modified keys

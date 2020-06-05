@@ -28,9 +28,7 @@ class Command(BaseCommand):
         if not settings.JOBS_API_KEY:
             raise CommandError("Jobs API Key must be set")
 
-        max_records = None
-        if options["max"]:
-            max_records = options["max"]
+        max_records = options.get("max", None)
 
         unscraped_listings = Listing.objects.filter(scraped=False)[:max_records]
 
@@ -55,13 +53,20 @@ class Command(BaseCommand):
             )
             if api_response.status_code != 200:
                 self.stdout.write(
-                    self.style.WARNING(
-                        f"API call failed for listing ID {listing.dol_id}"
+                    self.style.ERROR(
+                        f"API call failed for listing ID {listing.dol_id} with status code {api_response.status_code}"
                     )
                 )
                 continue
 
-            listing.scraped_data = api_response.json()["value"]
+            try:
+                listing.scraped_data = api_response.json()["value"]
+            except ValueError:
+                self.stdout.write(
+                    self.style.ERROR(f"Invalid JSON for {listing.dol_id}")
+                )
+                continue
+
             listing.scraped = True
             listing.save()
             scraped_count += 1
