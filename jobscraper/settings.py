@@ -52,6 +52,26 @@ DATABASES = {
 # Upload handling
 MEDIA_ROOT = base_dir_join("files")
 
+USE_AWS = os.getenv("USE_AWS", os.getenv("AWS_ACCESS_KEY_ID", False))
+
+if USE_AWS and USE_AWS != "False":
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
+    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+    AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "")
+    AWS_DEFAULT_ACL = None
+
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "postgres",
+            "USER": "postgres",
+            "PASSWORD": os.getenv("AWS_PGPASS", ""),
+            "HOST": os.getenv("AWS_PGHOST", ""),
+            "PORT": "5432",
+        }
+    }
+
 # Seasonal jobs specific URLS
 JOBS_RSS_FEED_URL = "https://seasonaljobs.dol.gov/job_rss.xml"
 JOBS_API_URL = "https://foreign-labor.search.windows.net/indexes/foreign-labor/docs/search?api-version=2017-11-11"

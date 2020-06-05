@@ -2,7 +2,7 @@ from io import StringIO
 import time
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.core.management import call_command
 from django.utils import timezone
 
@@ -12,7 +12,7 @@ from listings.models import Listing, StaticValue
 class FakeResponse(object):
     # default response attributes
     status_code = 200
-    content = "Some content"
+    content = b"Some content"
 
     def json(self):
         return {"value": {"a_key": "a value"}}
@@ -21,6 +21,7 @@ class FakeResponse(object):
         raise ValueError
 
 
+@override_settings(DEFAULT_FILE_STORAGE="django.core.files.storage.FileSystemStorage")
 class TestScrapeListings(TestCase):
     def setUp(self):
         # currently just creates 1 listing
