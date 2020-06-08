@@ -31,4 +31,8 @@
  * Run `./deploy-lambda.sh` from the console. This command will create a zip file with all project dependencies (from `.venv/../site-packages`), a special AWS Lambda-friendly version of psycopg2 (from `aws_psycopg2` directory) and the project code, and then upload it to AWS as a lambda function.
  
  ### Scheduling on AWS
+ Schedule the scraper using Amazon Event Bridge. Event input should be fixed JSON, e.g.:
+ ```
+{"command": "scrape_rss"}
+```
  
