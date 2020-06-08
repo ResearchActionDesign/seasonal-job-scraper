@@ -86,7 +86,10 @@ class Command(BaseCommand):
                 timeout=30,
             )
 
-            if job_order_pdf.status_code in (200, 301):
+            if (
+                job_order_pdf.status_code in (200, 301)
+                and job_order_pdf.url != "https://seasonaljobs.dol.gov/system/404"
+            ):
                 listing.pdf = ContentFile(
                     job_order_pdf.content, name=f"{listing.dol_id}.pdf"
                 )
