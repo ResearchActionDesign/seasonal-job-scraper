@@ -50,6 +50,7 @@ class Command(BaseCommand):
                 settings.JOBS_API_URL,
                 json=payload,
                 headers={"api-key": settings.JOBS_API_KEY},
+                timeout=30,
             )
             if api_response.status_code != 200:
                 self.stdout.write(
@@ -80,7 +81,9 @@ class Command(BaseCommand):
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:77.0) Gecko/20100101 Firefox/77.0"
             }
             job_order_pdf = requests.get(
-                f"{settings.JOB_ORDER_BASE_URL}{listing.dol_id}", headers=headers
+                f"{settings.JOB_ORDER_BASE_URL}{listing.dol_id}",
+                headers=headers,
+                timeout=30,
             )
 
             if job_order_pdf.status_code in (200, 301):

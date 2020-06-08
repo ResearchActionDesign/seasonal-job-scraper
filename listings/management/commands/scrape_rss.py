@@ -54,7 +54,10 @@ class Command(BaseCommand):
             modified = None
 
         rss_entries = feedparser.parse(
-            settings.JOBS_RSS_FEED_URL, etag=etag, modified=modified
+            settings.JOBS_RSS_FEED_URL,
+            etag=etag,
+            modified=modified,
+            agent="Mozilla/5.0 (Windows NT 10.0; WOW64; rv:77.0) Gecko/20100101 Firefox/77.0",
         )
 
         if rss_entries.get("bozo", False):
