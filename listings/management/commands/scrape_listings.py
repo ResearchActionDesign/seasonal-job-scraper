@@ -1,10 +1,6 @@
-from time import strftime
-
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.core.files.base import ContentFile
-from django.utils.timezone import now
-from django.db import IntegrityError
 
 from listings.models import Listing
 
@@ -61,7 +57,7 @@ class Command(BaseCommand):
                 continue
 
             try:
-                listing.scraped_data = api_response.json()["value"]
+                listing.scraped_data = api_response.json()["value"][0]
             except ValueError:
                 self.stdout.write(
                     self.style.ERROR(f"Invalid JSON for {listing.dol_id}")

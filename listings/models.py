@@ -31,7 +31,8 @@ class Listing(CreatedModifiedMixin, models.Model):
     description = models.TextField()
     dol_id = models.CharField(max_length=255, unique=True)
     pub_date = models.DateField()
-    last_seen = models.DateTimeField(auto_now_add=True)
+    last_seen = models.DateField(auto_now_add=True)
+    first_seen = models.DateField(auto_now_add=True)
 
     # Has this listing been scraped?
     scraped = models.BooleanField(default=False)

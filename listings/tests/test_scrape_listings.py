@@ -13,9 +13,10 @@ class FakeResponse(object):
     # default response attributes
     status_code = 200
     content = b"Some content"
+    url = "https://seasonaljob.dol.gov/a-real-url"
 
     def json(self):
-        return {"value": {"a_key": "a value"}}
+        return {"value": [{"a_key": "a value"}]}
 
     def invalid_json(self):
         raise ValueError
