@@ -156,13 +156,8 @@ class Command(BaseCommand):
             "job_order_id",
         ]
 
-        basepath = os.path.join(settings.MEDIA_ROOT, "exports")
-        if not os.path.exists(basepath):
-            os.makedirs(basepath)
+        filename = f"job-listings{last_string}--{date.today()}.csv"
 
-        filepath = os.path.join(
-            basepath, f"job-listings{last_string}--{date.today()}.csv"
-        )
         export_listings_csv(
-            filepath, fieldnames, listings_to_csv(listings_query, fieldnames)
+            filename, fieldnames, listings_to_csv(listings_query, fieldnames)
         )
