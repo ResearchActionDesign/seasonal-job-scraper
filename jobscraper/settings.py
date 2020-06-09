@@ -60,6 +60,7 @@ if USE_AWS and USE_AWS != "False":
     AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
     AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "")
     AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = False
 
     DATABASES = {
         "default": {
