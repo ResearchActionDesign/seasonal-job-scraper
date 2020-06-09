@@ -28,7 +28,11 @@ def lambda_handler(event, context):
             "forget to activate a virtual environment?"
         ) from exc
 
-    if "command" in event and event["command"] in ["scrape_rss", "scrape_listings"]:
+    if "command" in event and event["command"] in [
+        "scrape_rss",
+        "scrape_listings",
+        "export_listings",
+    ]:
         extra_args = event.get("args", [])
         execute_from_command_line(["", event["command"]] + extra_args)
 
