@@ -32,7 +32,7 @@ def listing_to_row(listing, fieldnames):
         "first_seen": listing.first_seen,
         "pub_date": listing.pub_date,
         "is_active": (listing.last_seen >= date.today()),
-        "job_order_pdf": "",  # TODO
+        "job_order_pdf": listing.pdf.url if listing.pdf else "",
     }
 
     return {
