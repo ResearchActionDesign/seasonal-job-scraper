@@ -29,6 +29,7 @@ def lambda_handler(event, context):
         ) from exc
 
     if "command" in event and event["command"] in ["scrape_rss", "scrape_listings"]:
-        execute_from_command_line(["", event["command"]])
+        extra_args = event.get("args", [])
+        execute_from_command_line(["", event["command"]] + extra_args)
 
     return get_stats()
