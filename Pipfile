@@ -16,6 +16,7 @@ feedparser = "*"
 python-dotenv = "~=0.12"
 django-storages = {extras = ["dropbox"], version = "~=1.9"}
 boto3 = "~=1.13"
+rollbar = "*"
 
 [requires]
 python_version = "3.6"

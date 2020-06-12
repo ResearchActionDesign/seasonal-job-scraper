@@ -8,6 +8,7 @@ from django.db import IntegrityError
 from listings.models import Listing, StaticValue
 
 import feedparser
+import rollbar
 
 ETAG_KEY = "jobs_rss__etag"
 MODIFIED_KEY = "jobs_rss__modified"
@@ -62,20 +63,17 @@ class Command(BaseCommand):
 
         if rss_entries.get("bozo", False):
             # Error code from feed scraper
-            self.stdout.write(
-                self.style.ERROR(
-                    f"Error pulling RSS Feed {rss_entries.get('bozo_exception', '')}"
-                )
-            )
+            msg = f"Error pulling RSS Feed {rss_entries.get('bozo_exception', '')}"
+
+            self.stdout.write(self.style.ERROR(msg))
+            rollbar.report_message(msg, "error")
             return
 
         elif rss_entries.get("status", False) not in [200, 301]:
             # Error code from feed scraper
-            self.stdout.write(
-                self.style.ERROR(
-                    f"RSS Feed status code: {rss_entries.get('status', False)}, not 200"
-                )
-            )
+            msg = f"RSS Feed status code: {rss_entries.get('status', False)}, not 200"
+            self.stdout.write(self.style.ERROR(msg))
+            rollbar.report_message(msg, "error")
             return
 
         elif rss_entries.get("version", "") == "":

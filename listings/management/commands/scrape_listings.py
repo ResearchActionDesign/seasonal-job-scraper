@@ -5,6 +5,7 @@ from django.core.files.base import ContentFile
 from listings.models import Listing
 
 import requests
+import rollbar
 
 
 class Command(BaseCommand):
@@ -49,19 +50,17 @@ class Command(BaseCommand):
                 timeout=30,
             )
             if api_response.status_code != 200:
-                self.stdout.write(
-                    self.style.ERROR(
-                        f"API call failed for listing ID {listing.dol_id} with status code {api_response.status_code}"
-                    )
-                )
+                msg = f"API call failed for listing ID {listing.dol_id} with status code {api_response.status_code}"
+                rollbar.report_message(msg, "error")
+                self.stdout.write(self.style.ERROR(msg))
                 continue
 
             try:
                 listing.scraped_data = api_response.json()["value"][0]
             except ValueError:
-                self.stdout.write(
-                    self.style.ERROR(f"Invalid JSON for {listing.dol_id}")
-                )
+                msg = f"Invalid JSON for {listing.dol_id}"
+                self.stdout.write(self.style.ERROR(msg))
+                rollbar.report_message(msg, "error")
                 continue
 
             listing.scraped = True
@@ -96,8 +95,6 @@ class Command(BaseCommand):
                     )
                 )
             else:
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"{scraped_count} - Failed job order PDF request for listing ID {listing.dol_id}"
-                    )
-                )
+                msg = f"{scraped_count} - Failed job order PDF request for listing ID {listing.dol_id}"
+                rollbar.report_message(msg, "warning")
+                self.stdout.write(self.style.WARNING(msg))

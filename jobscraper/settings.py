@@ -55,6 +55,7 @@ MEDIA_ROOT = base_dir_join("files")
 USE_AWS = os.getenv("USE_AWS", os.getenv("AWS_ACCESS_KEY_ID", False))
 
 if USE_AWS and USE_AWS != "False":
+    DEBUG = False
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
     AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
     AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
@@ -80,3 +81,13 @@ JOBS_RSS_FEED_URL = "https://seasonaljobs.dol.gov/job_rss.xml"
 JOBS_API_URL = "https://foreign-labor.search.windows.net/indexes/foreign-labor/docs/search?api-version=2017-11-11"
 JOB_ORDER_BASE_URL = "https://seasonaljobs.dol.gov/job-order/"
 JOBS_API_KEY = os.getenv("JOBS_API_KEY", False)
+
+# Rollbar
+ROLLBAR = {
+    "access_token": os.getenv("ROLLBAR_ACCESS_TOKEN", ""),
+    "environment": "development" if DEBUG else "production",
+    "root": BASE_DIR,
+}
+import rollbar
+
+rollbar.init(**ROLLBAR)
