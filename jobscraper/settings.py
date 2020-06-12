@@ -73,6 +73,8 @@ if USE_AWS and USE_AWS != "False":
         }
     }
 
+DROPBOX_OAUTH2_TOKEN = os.getenv("DROPBOX_OAUTH2_TOKEN", "")
+
 # Seasonal jobs specific URLS
 JOBS_RSS_FEED_URL = "https://seasonaljobs.dol.gov/job_rss.xml"
 JOBS_API_URL = "https://foreign-labor.search.windows.net/indexes/foreign-labor/docs/search?api-version=2017-11-11"
