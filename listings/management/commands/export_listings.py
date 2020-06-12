@@ -31,7 +31,7 @@ def listing_to_row(listing, fieldnames):
         "last_seen": listing.last_seen,
         "first_seen": listing.first_seen,
         "pub_date": listing.pub_date,
-        "is_active": (listing.last_seen >= date.today()),
+        "is_active": (listing.last_seen >= date.today() - timedelta(days=1)),
         "job_order_pdf": listing.pdf.url if listing.pdf else "",
     }
 
