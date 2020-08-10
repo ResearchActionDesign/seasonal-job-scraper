@@ -58,13 +58,24 @@ class Command(BaseCommand):
             choices=["year", "month", "week", "day"],
             help="Optional - last seen date range to export (last year, last month, last week, last day). Defaults to all time. Last week and last day are inclusive of today, others are exclusive.",
         )
+        parser.add_argument(
+            "--drupal",
+            action="store_true",
+            help="Export specifically to the jobscraper_listings.csv file in CSV format for Drupal import",
+        )
 
     def handle(self, *args, **options):
         listings_query = Listing.objects.all()
 
         last_string = ""  # to be added into filename
+        today = date.today()
+
+        if options["drupal"]:
+            listings_query = listings_query.filter(
+                last_seen__gte=today - timedelta(days=1)
+            )
+
         if options["last"]:
-            today = date.today()
             if options["last"] == "day":
                 listings_query = listings_query.filter(
                     last_seen__gte=today - timedelta(days=1)
@@ -157,6 +168,8 @@ class Command(BaseCommand):
         ]
 
         filename = f"job-listings{last_string}--{date.today()}.csv"
+        if options["drupal"]:
+            filename = f"jobscraper_listings.csv"
 
         export_listings_csv(
             filename, fieldnames, listings_to_csv(listings_query, fieldnames)

@@ -20,7 +20,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        if not settings.JOBS_API_URL or not settings.JOB_ORDER_BASE_URL:
+        if not (settings.JOBS_API_URL and settings.JOB_ORDER_BASE_URL):
             raise CommandError("JOBS_API_URL and JOB_ORDER_BASE_URL must be set")
         if not settings.JOBS_API_KEY:
             raise CommandError("Jobs API Key must be set")
