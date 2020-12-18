@@ -27,7 +27,7 @@ def base_dir_join(*args):
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "fdiqs@2l8@v0l8e-jl96%t)5a^ht0rv8r6vd#rnk6nmwx2s$*("
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -78,7 +78,7 @@ DROPBOX_OAUTH2_TOKEN = os.getenv("DROPBOX_OAUTH2_TOKEN", "")
 
 # Seasonal jobs specific URLS
 JOBS_RSS_FEED_URL = "https://seasonaljobs.dol.gov/job_rss.xml"
-JOBS_API_URL = "https://foreign-labor.search.windows.net/indexes/foreign-labor/docs/search?api-version=2017-11-11"
+JOBS_API_URL = "https://seasonaljobs.dol.gov/datahub/search?api-version=2020-06-30"
 JOB_ORDER_BASE_URL = "https://seasonaljobs.dol.gov/job-order/"
 JOBS_API_KEY = os.getenv("JOBS_API_KEY", False)
 
