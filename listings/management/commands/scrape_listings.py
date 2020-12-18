@@ -72,6 +72,7 @@ class Command(BaseCommand):
                 rollbar.report_message(msg, "error")
             else:
                 listing.scraped = True
+                listing.scraped_data = scraped_data
                 listing.save()
                 scraped_count += 1
                 self.stdout.write(
