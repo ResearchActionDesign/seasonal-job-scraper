@@ -16,7 +16,7 @@ class FakeResponse(object):
     url = "https://seasonaljob.dol.gov/a-real-url"
 
     def json(self):
-        return {"value": [{"a_key": "a value"}]}
+        return {"value": [{"a_key": "a value", "case_number": "H-1"}]}
 
     def invalid_json(self):
         raise ValueError

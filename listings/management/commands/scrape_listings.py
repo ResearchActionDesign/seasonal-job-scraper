@@ -46,7 +46,10 @@ class Command(BaseCommand):
             api_response = requests.post(
                 settings.JOBS_API_URL,
                 json=payload,
-                headers={"api-key": settings.JOBS_API_KEY},
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36",
+                    "Content-Type": "application/json",
+                },
                 timeout=30,
             )
             if api_response.status_code != 200:
@@ -56,24 +59,33 @@ class Command(BaseCommand):
                 continue
 
             try:
-                listing.scraped_data = api_response.json()["value"][0]
+                scraped_data = api_response.json()["value"][0]
             except ValueError:
                 msg = f"Invalid JSON for {listing.dol_id}"
                 self.stdout.write(self.style.ERROR(msg))
                 rollbar.report_message(msg, "error")
                 continue
 
-            listing.scraped = True
-            listing.save()
-            scraped_count += 1
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{scraped_count} - Saved data for listing ID {listing.dol_id}"
+            if scraped_data["case_number"] != listing.dol_id:
+                msg = f"Case number mismatch between scraped data for DOL ID {listing.dol_id}. Scraped URL {settings.JOBS_API_URL}"
+                self.stdout.write(self.style.ERROR(msg))
+                rollbar.report_message(msg, "error")
+            else:
+                listing.scraped = True
+                listing.scraped_data = scraped_data
+                listing.save()
+                scraped_count += 1
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"{scraped_count} - Saved data for listing ID {listing.dol_id}"
+                    )
                 )
-            )
+
+            if listing.pdf:
+                continue
 
             headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:77.0) Gecko/20100101 Firefox/77.0"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246"
             }
             job_order_pdf = requests.get(
                 f"{settings.JOB_ORDER_BASE_URL}{listing.dol_id}",
