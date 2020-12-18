@@ -2,7 +2,7 @@
 
 ## Local set-up
 
-1. Run `pipenv install`
+1. Run `PIPENV_VENV_IN_PROJECT=1 pipenv install`
 2. Configure environment variables in `.env` file. You'll need, at a minimum:
     * JOBS_API_KEY = API key for requests to seasonaljobs.dol.gov's Microsoft Search back-end. Can be found by inspecting network requests on an individual job listing in web browser.
  3. Run `pre-commit install` to install pre-commit hooks for Black python formatter.
@@ -28,7 +28,9 @@
  Additionally, the Lambda function must be in the same VPC as the RDS instance and have a role which has write access to the relevant S3 bucket. Lastly, the VPC needs to have a NAT Gateway in order for the scraper to successfully make outgoing requests. See [this article](https://medium.com/@philippholly/aws-lambda-enable-outgoing-internet-access-within-vpc-8dd250e11e12#.bhx40hq3e) for a full how-to.
  
  ### To deploy to AWS
- * Run `./deploy-lambda.sh` from the console. This command will create a zip file with all project dependencies (from `.venv/../site-packages`), a special AWS Lambda-friendly version of psycopg2 (from `aws_psycopg2` directory) and the project code, and then upload it to AWS as a lambda function.
+ * Run `./deploy-lambda.sh` from the console. This command will create a zip file with all project dependencies (from `.venv/../site-packages`), 
+   a special AWS Lambda-friendly version of psycopg2 (from `aws_psycopg2` directory, sourced from [https://github.com/jkehler/awslambda-psycopg2](https://github.com/jkehler/awslambda-psycopg2)) 
+   and the project code, and then upload it to AWS as a lambda function.
  
  ### Scheduling on AWS
  Schedule the scraper using Amazon Event Bridge. Event input should be fixed JSON, e.g.:

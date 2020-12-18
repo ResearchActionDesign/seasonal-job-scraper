@@ -2,11 +2,7 @@ from datetime import datetime, timedelta, date
 import os
 import csv
 
-from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings
-from django.core.files import File
-from django.utils.timezone import now
-from django.db import IntegrityError
+from django.core.management.base import BaseCommand
 
 from listings.models import Listing
 from listings.utils import export_listings_csv
