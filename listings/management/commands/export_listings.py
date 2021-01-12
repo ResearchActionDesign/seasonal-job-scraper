@@ -1,11 +1,9 @@
-from datetime import datetime, timedelta, date
-import os
-import csv
+from datetime import timedelta, date
 
 from django.core.management.base import BaseCommand
 
 from listings.models import Listing
-from listings.utils import export_listings_csv
+from listings.utils import export_listings_csv, export_listings_json
 
 
 def listing_to_row(listing, fieldnames):
@@ -39,7 +37,7 @@ def listing_to_row(listing, fieldnames):
     }
 
 
-def listings_to_csv(listings, fieldnames):
+def listings_to_rows(listings, fieldnames):
     for listing in listings:
         yield listing_to_row(listing, fieldnames)
     return
@@ -59,17 +57,23 @@ class Command(BaseCommand):
             action="store_true",
             help="Export specifically to the jobscraper_listings.csv file in CSV format for Drupal import",
         )
+        parser.add_argument("--json", action="store_true", help="Export to JSON format")
 
     def handle(self, *args, **options):
         listings_query = Listing.objects.all()
 
         last_string = ""  # to be added into filename
         today = date.today()
+        file_extension = "csv"
 
         if options["drupal"]:
             listings_query = listings_query.filter(
                 last_seen__gte=today - timedelta(days=1)
             )
+            options["json"] = True
+
+        if options["json"]:
+            file_extension = "json"
 
         if options["last"]:
             if options["last"] == "day":
@@ -163,10 +167,14 @@ class Command(BaseCommand):
             "job_order_id",
         ]
 
-        filename = f"job-listings{last_string}--{date.today()}.csv"
+        filename = f"job-listings{last_string}--{date.today()}.{file_extension}"
         if options["drupal"]:
-            filename = f"jobscraper_listings.csv"
+            filename = f"jobscraper_listings.{file_extension}"
 
-        export_listings_csv(
-            filename, fieldnames, listings_to_csv(listings_query, fieldnames)
-        )
+        if options["json"]:
+            export_listings_json(filename, listings_to_rows(listings_query, fieldnames))
+
+        else:
+            export_listings_csv(
+                filename, fieldnames, listings_to_rows(listings_query, fieldnames)
+            )
