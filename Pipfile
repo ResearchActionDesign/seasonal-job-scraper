@@ -4,8 +4,9 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "*"
+black = "20.8b1"
 pre-commit = "*"
+typing-extensions = "*"
 
 [packages]
 django = "~=3.1"
