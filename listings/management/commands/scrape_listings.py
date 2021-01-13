@@ -16,7 +16,7 @@ class Command(BaseCommand):
             "--max",
             type=int,
             help="Max number of entries to process, defaults to 1",
-            default=1,
+            default=10,
         )
 
     def handle(self, *args, **options):
@@ -27,7 +27,9 @@ class Command(BaseCommand):
 
         max_records = options.get("max", None)
 
-        unscraped_listings = Listing.objects.filter(scraped=False)[:max_records]
+        unscraped_listings = Listing.objects.filter(scraped=False).order_by(
+            "-last_seen"
+        )[:max_records]
 
         if len(unscraped_listings) == 0:
             self.stdout.write(self.style.SUCCESS("No listings left to scrape!"))
