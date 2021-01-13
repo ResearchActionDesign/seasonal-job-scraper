@@ -102,7 +102,8 @@ class TestExportListings(TestCase):
         mock_export_csv.assert_called_once()
         call_args = mock_export_csv.call_args[0]
         self.assertEqual(
-            call_args[0], f"job-listings--last-day--{date.today()}.csv",
+            call_args[0],
+            f"job-listings--last-day--{date.today()}.csv",
         )
         self.assertEqual(len(list(call_args[2])), 2)
 
@@ -114,7 +115,8 @@ class TestExportListings(TestCase):
         mock_export_csv.assert_called_once()
         call_args = mock_export_csv.call_args[0]
         self.assertEqual(
-            call_args[0], f"job-listings--last-week--{date.today()}.csv",
+            call_args[0],
+            f"job-listings--last-week--{date.today()}.csv",
         )
         self.assertEqual(len(list(call_args[2])), 8)
 
@@ -125,6 +127,7 @@ class TestExportListings(TestCase):
         mock_export_csv.assert_called_once()
         call_args = mock_export_csv.call_args[0]
         self.assertEqual(
-            call_args[0], f"job-listings--last-month--{date.today()}.csv",
+            call_args[0],
+            f"job-listings--last-month--{date.today()}.csv",
         )
         self.assertEqual(len(list(call_args[2])), self.expected_month_count)
