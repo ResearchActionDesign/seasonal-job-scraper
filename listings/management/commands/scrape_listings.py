@@ -71,7 +71,6 @@ class Command(BaseCommand):
             if scraped_data["case_number"] != listing.dol_id:
                 msg = f"Case number mismatch between scraped data for DOL ID {listing.dol_id}. Scraped URL {settings.JOBS_API_URL}"
                 self.stdout.write(self.style.ERROR(msg))
-                rollbar.report_message(msg, "error")
             else:
                 listing.scraped = True
                 listing.scraped_data = scraped_data
