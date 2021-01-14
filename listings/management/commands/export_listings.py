@@ -68,9 +68,8 @@ class Command(BaseCommand):
 
         if options["drupal"]:
             listings_query = listings_query.filter(
-                last_seen__gte=today - timedelta(days=1)
+                last_seen__gte=today - timedelta(days=1), scraped=True
             )
-            options["json"] = True
 
         if options["json"]:
             file_extension = "json"
