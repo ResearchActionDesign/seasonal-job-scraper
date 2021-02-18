@@ -55,17 +55,28 @@ class Command(BaseCommand):
                 timeout=30,
             )
             if api_response.status_code != 200:
-                msg = f"API call failed for listing ID {listing.dol_id} with status code {api_response.status_code}"
-                rollbar.report_message(msg, "error")
+                msg = f"API call failed for listing"
+                rollbar.report_message(
+                    msg,
+                    "error",
+                    extra_data={
+                        "dol_id": listing.dol_id,
+                        "response": api_response,
+                    },
+                )
                 self.stdout.write(self.style.ERROR(msg))
                 continue
 
             try:
                 scraped_data = api_response.json()["value"][0]
             except ValueError:
-                msg = f"Invalid JSON for {listing.dol_id}"
+                msg = f"Invalid JSON"
                 self.stdout.write(self.style.ERROR(msg))
-                rollbar.report_message(msg, "error")
+                rollbar.report_message(
+                    msg,
+                    "error",
+                    extra_data={"dol_id": listing.dol_id, "response": api_response},
+                )
                 continue
 
             if scraped_data["case_number"] != listing.dol_id:
@@ -108,6 +119,16 @@ class Command(BaseCommand):
                     )
                 )
             else:
-                msg = f"{scraped_count} - Failed job order PDF request for listing ID {listing.dol_id}"
-                rollbar.report_message(msg, "warning")
-                self.stdout.write(self.style.WARNING(msg))
+                rollbar.report_message(
+                    "Failed job order PDF request for listing ID",
+                    "warning",
+                    extra_data={
+                        "dol_id": listing.dol_id,
+                        "pdf_request": job_order_pdf,
+                    },
+                )
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"{scraped_count} - Failed job order PDF request for listing ID {listing.dol_id}"
+                    )
+                )
