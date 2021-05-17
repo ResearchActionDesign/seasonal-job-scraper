@@ -67,9 +67,8 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.ERROR(msg))
             rollbar.report_message(msg, "error")
-            return
 
-        elif rss_entries.get("status", False) not in [200, 301]:
+        if rss_entries.get("status", False) not in [200, 301]:
             # Error code from feed scraper
             msg = f"RSS Feed status code: {rss_entries.get('status', False)}, not 200"
             self.stdout.write(self.style.ERROR(msg))
