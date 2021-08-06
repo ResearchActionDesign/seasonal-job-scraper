@@ -17,7 +17,8 @@ class CreatedModifiedMixin(DirtyFieldsMixin, models.Model):
     def save(self, *args, **kwargs):
         if self.created and self.is_dirty():
             delta = timezone.now() - self.created
-            # Only save modified flag if more than 10 seconds have passed, in production. Disable in DEBUG for automated testing.
+            # Only save modified flag if more than 10 seconds have passed, in production.
+            # Disable in DEBUG for automated testing.
             if settings.DEBUG or delta.days > 0 or delta.seconds > 10:
                 self.modified = timezone.now()
 
@@ -42,6 +43,18 @@ class Listing(CreatedModifiedMixin, models.Model):
 
     # Associated PDF
     pdf = models.FileField(upload_to="job_pdfs/", null=True)
+
+    def clean(self):
+        # Check that the url field in scraped_data is not invalid.
+        if not self.scraped_data:
+            return
+        apply_url = self.scraped_data.get("apply_url", "")
+        if apply_url == "N/A":
+            self.scraped_data["apply_url"] = ""
+        elif "https://http:" in apply_url:
+            self.scraped_data["apply_url"] = apply_url.replace(
+                "https://http:", "https://"
+            )
 
 
 class StaticValue(models.Model):
