@@ -17,7 +17,8 @@ class CreatedModifiedMixin(DirtyFieldsMixin, models.Model):
     def save(self, *args, **kwargs):
         if self.created and self.is_dirty():
             delta = timezone.now() - self.created
-            # Only save modified flag if more than 10 seconds have passed, in production. Disable in DEBUG for automated testing.
+            # Only save modified flag if more than 10 seconds have passed, in production.
+            # Disable in DEBUG for automated testing.
             if settings.DEBUG or delta.days > 0 or delta.seconds > 10:
                 self.modified = timezone.now()
 
