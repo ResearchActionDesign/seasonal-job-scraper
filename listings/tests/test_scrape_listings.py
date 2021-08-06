@@ -43,7 +43,7 @@ class TestScrapeListings(TestCase):
             call_command("scrape_listings", stdout=out)
             mock_request_post.assert_called_once()
             self.assertEqual(Listing.objects.filter(scraped=True).count(), 0)
-            self.assertIn("403", out.getvalue())
+            self.assertIn("API call failed for listing", out.getvalue())
 
     def test_fails_on_invalid_json(self):
         with patch("requests.post") as mock_request_post:

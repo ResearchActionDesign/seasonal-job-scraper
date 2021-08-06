@@ -85,6 +85,7 @@ class Command(BaseCommand):
             else:
                 listing.scraped = True
                 listing.scraped_data = scraped_data
+                listing.clean()
                 listing.save()
                 scraped_count += 1
                 self.stdout.write(

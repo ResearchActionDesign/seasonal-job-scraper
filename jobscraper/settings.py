@@ -49,6 +49,8 @@ DATABASES = {
     }
 }
 
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
 # Upload handling
 MEDIA_ROOT = base_dir_join("files")
 

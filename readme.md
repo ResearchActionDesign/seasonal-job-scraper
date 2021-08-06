@@ -37,4 +37,8 @@
  ```
 {"command": "scrape_rss"}
 ```
+
+### Running migrations on AWS.
+
+To run migrations on AWS, set the .env variables to locally access the AWS PostGres database and run migrations as normal. Note that you will need to ensure that your IP is allowed as an inbound/outbound IP address in the security group.
  
