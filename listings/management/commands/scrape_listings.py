@@ -1,3 +1,5 @@
+import random
+
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -100,8 +102,9 @@ class Command(BaseCommand):
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246"
             }
+            pdf_url = f"{settings.JOB_ORDER_BASE_URL}{listing.dol_id}"
             job_order_pdf = requests.get(
-                f"{settings.JOB_ORDER_BASE_URL}{listing.dol_id}",
+                pdf_url,
                 headers=headers,
                 timeout=30,
             )
@@ -120,16 +123,21 @@ class Command(BaseCommand):
                     )
                 )
             else:
-                rollbar.report_message(
-                    "Failed job order PDF request for listing ID",
-                    "warning",
-                    extra_data={
-                        "dol_id": listing.dol_id,
-                        "pdf_request": job_order_pdf,
-                    },
-                )
+                # We want to track in rollbar if there's a spike in this error because maybe then
+                # PDF scraping is broken entirely, but don't need to track every single occurance,
+                # so throttling to only log 1/10 of the occurences.
+                if random.randint(0, 10) == 0:
+                    rollbar.report_message(
+                        "Failed job order PDF request for listing ID",
+                        "warning",
+                        extra_data={
+                            "dol_id": listing.dol_id,
+                            "pdf_request": job_order_pdf,
+                            "pdf_url": pdf_url,
+                        },
+                    )
                 self.stdout.write(
                     self.style.WARNING(
-                        f"{scraped_count} - Failed job order PDF request for listing ID {listing.dol_id}"
+                        f"{scraped_count} - Failed job order PDF request for listing ID {listing.dol_id}, url {pdf_url}"
                     )
                 )
