@@ -57,13 +57,12 @@ class Command(BaseCommand):
                 timeout=30,
             )
             if api_response.status_code != 200:
-                msg = f"API call failed for listing"
+                msg = f"API call failed for listing, status code {api_response.status_code}"
                 rollbar.report_message(
                     msg,
                     "error",
                     extra_data={
                         "dol_id": listing.dol_id,
-                        "response": api_response,
                     },
                 )
                 self.stdout.write(self.style.ERROR(msg))

@@ -9,9 +9,11 @@ from listings.models import Listing, StaticValue
 
 import feedparser
 import rollbar
+import re
 
 ETAG_KEY = "jobs_rss__etag"
 MODIFIED_KEY = "jobs_rss__modified"
+DOL_ID_REGEX = re.compile(r"(H-[0-9\-]+)")
 
 
 class Command(BaseCommand):
@@ -85,9 +87,19 @@ class Command(BaseCommand):
             if max_records and processed_count > max_records:
                 break
 
-            dol_id = str(entry.get("link", "")).replace(
-                "http://seasonaljobs.dol.gov/jobs/", ""
-            )
+            link = entry.get("link", "")
+            dol_ids = DOL_ID_REGEX.findall(link)
+
+            if len(dol_ids) == 0:
+                msg = f'No Dol ID found in RSS listing, with link="{link}"'
+                rollbar.report_message(msg, "error")
+                continue
+            elif len(dol_ids) > 1:
+                msg = f'Multiple Dol IDs found in RSS listing, with link="{link}"'
+                rollbar.report_message(msg, "error")
+                continue
+
+            dol_id = dol_ids[0]
             pub_date = strftime("%Y-%m-%d", entry.get("published_parsed", ""))
             if not dol_id:
                 self.stdout.write(
