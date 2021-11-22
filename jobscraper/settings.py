@@ -81,7 +81,7 @@ DROPBOX_OAUTH2_TOKEN = os.getenv("DROPBOX_OAUTH2_TOKEN", "")
 # Seasonal jobs specific URLS
 JOBS_RSS_FEED_URL = "https://seasonaljobs.dol.gov/job_rss.xml"
 JOBS_API_URL = "https://api.seasonaljobs.dol.gov/datahub/search?api-version=2020-06-30"
-JOB_ORDER_BASE_URL = "https://seasonaljobs.dol.gov/job-order/"
+JOB_ORDER_BASE_URL = "https://api.seasonaljobs.dol.gov/job-order/"
 JOBS_API_KEY = os.getenv("JOBS_API_KEY", False)
 
 # Rollbar
