@@ -29,9 +29,9 @@ class Command(BaseCommand):
 
         max_records = options.get("max", None)
 
-        unscraped_listings = Listing.objects.filter(scraped=False).order_by(
-            "-last_seen"
-        )[:max_records]
+        unscraped_listings = Listing.objects.filter(scraped=False).order_by("-created")[
+            :max_records
+        ]
 
         if len(unscraped_listings) == 0:
             self.stdout.write(self.style.SUCCESS("No listings left to scrape!"))
@@ -44,7 +44,8 @@ class Command(BaseCommand):
 
             payload = {
                 "searchFields": "case_number",
-                "search": listing.dol_id,
+                "orderby": "search.score() desc",
+                "search": f'"{listing.dol_id}"',
                 "top": 1,
             }
             api_response = requests.post(
@@ -80,10 +81,24 @@ class Command(BaseCommand):
                 )
                 continue
 
+            scrape_successful = True
             if scraped_data["case_number"] != listing.dol_id:
                 msg = f"Case number mismatch between scraped data for DOL ID {listing.dol_id}. Scraped URL {settings.JOBS_API_URL}"
                 self.stdout.write(self.style.ERROR(msg))
-            else:
+
+                # Try to parse the data anyway.
+                original_listing = listing
+                try:
+                    listing = Listing.objects.get(
+                        dol_id=scraped_data["case_number"], scraped=False
+                    )
+                except Listing.DoesNotExist:
+                    listing = (
+                        original_listing  # Save this value so we can check for a PDF
+                    )
+                    scrape_successful = False
+
+            if scrape_successful:
                 listing.scraped = True
                 listing.scraped_data = scraped_data
                 listing.clean()
