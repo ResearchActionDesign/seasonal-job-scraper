@@ -49,7 +49,7 @@ class Listing(CreatedModifiedMixin, models.Model):
         if not self.scraped_data:
             return
         apply_url = self.scraped_data.get("apply_url", "")
-        if apply_url == "N/A":
+        if apply_url == "N/A" or not apply_url:
             self.scraped_data["apply_url"] = ""
         elif "https://http:" in apply_url:
             self.scraped_data["apply_url"] = apply_url.replace(
