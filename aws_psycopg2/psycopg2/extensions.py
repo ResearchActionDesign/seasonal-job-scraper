@@ -13,7 +13,7 @@ This module holds all the extensions to the DBAPI-2.0 provided by psycopg.
 # psycopg/extensions.py - DBAPI-2.0 extensions specific to psycopg
 #
 # Copyright (C) 2003-2019 Federico Di Gregorio  <fog@debian.org>
-# Copyright (C) 2020 The Psycopg Team
+# Copyright (C) 2020-2021 The Psycopg Team
 #
 # psycopg2 is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published
@@ -35,103 +35,25 @@ This module holds all the extensions to the DBAPI-2.0 provided by psycopg.
 
 import re as _re
 
-from psycopg2._psycopg import (  # noqa
-    BINARYARRAY,
-    BOOLEAN,
-    BOOLEANARRAY,
-    BYTES,
-    BYTESARRAY,
-    DATE,
-    DATEARRAY,
-    DATETIMEARRAY,
-    DECIMAL,
-    DECIMALARRAY,
-    FLOAT,
-    FLOATARRAY,
-    INTEGER,
-    INTEGERARRAY,
-    INTERVAL,
-    INTERVALARRAY,
-    LONGINTEGER,
-    LONGINTEGERARRAY,
-    ROWIDARRAY,
-    STRINGARRAY,
-    TIME,
-    TIMEARRAY,
-    UNICODE,
-    UNICODEARRAY,
-    AsIs,
-    Binary,
-    Boolean,
-    Float,
-    Int,
-    QuotedString,
-)
+from psycopg2._psycopg import (                             # noqa
+    BINARYARRAY, BOOLEAN, BOOLEANARRAY, BYTES, BYTESARRAY, DATE, DATEARRAY,
+    DATETIMEARRAY, DECIMAL, DECIMALARRAY, FLOAT, FLOATARRAY, INTEGER,
+    INTEGERARRAY, INTERVAL, INTERVALARRAY, LONGINTEGER, LONGINTEGERARRAY,
+    ROWIDARRAY, STRINGARRAY, TIME, TIMEARRAY, UNICODE, UNICODEARRAY,
+    AsIs, Binary, Boolean, Float, Int, QuotedString, )
 
-try:
-    from psycopg2._psycopg import (  # noqa
-        MXDATE,
-        MXDATETIME,
-        MXDATETIMETZ,
-        MXINTERVAL,
-        MXTIME,
-        MXDATEARRAY,
-        MXDATETIMEARRAY,
-        MXDATETIMETZARRAY,
-        MXINTERVALARRAY,
-        MXTIMEARRAY,
-        DateFromMx,
-        TimeFromMx,
-        TimestampFromMx,
-        IntervalFromMx,
-    )
-except ImportError:
-    pass
+from psycopg2._psycopg import (                         # noqa
+    PYDATE, PYDATETIME, PYDATETIMETZ, PYINTERVAL, PYTIME, PYDATEARRAY,
+    PYDATETIMEARRAY, PYDATETIMETZARRAY, PYINTERVALARRAY, PYTIMEARRAY,
+    DateFromPy, TimeFromPy, TimestampFromPy, IntervalFromPy, )
 
-from psycopg2._psycopg import (  # noqa
-    PYDATE,
-    PYDATETIME,
-    PYDATETIMETZ,
-    PYINTERVAL,
-    PYTIME,
-    PYDATEARRAY,
-    PYDATETIMEARRAY,
-    PYDATETIMETZARRAY,
-    PYINTERVALARRAY,
-    PYTIMEARRAY,
-    DateFromPy,
-    TimeFromPy,
-    TimestampFromPy,
-    IntervalFromPy,
-)
-
-from psycopg2._psycopg import (  # noqa
-    adapt,
-    adapters,
-    encodings,
-    connection,
-    cursor,
-    lobject,
-    Xid,
-    libpq_version,
-    parse_dsn,
-    quote_ident,
-    string_types,
-    binary_types,
-    new_type,
-    new_array_type,
-    register_type,
-    ISQLQuote,
-    Notify,
-    Diagnostics,
-    Column,
-    ConnectionInfo,
-    QueryCanceledError,
-    TransactionRollbackError,
-    set_wait_callback,
-    get_wait_callback,
-    encrypt_password,
-)
+from psycopg2._psycopg import (                             # noqa
+    adapt, adapters, encodings, connection, cursor,
+    lobject, Xid, libpq_version, parse_dsn, quote_ident,
+    string_types, binary_types, new_type, new_array_type, register_type,
+    ISQLQuote, Notify, Diagnostics, Column, ConnectionInfo,
+    QueryCanceledError, TransactionRollbackError,
+    set_wait_callback, get_wait_callback, encrypt_password, )
 
 
 """Isolation level values."""
@@ -176,9 +98,8 @@ def register_adapter(typ, callable):
 
 
 # The SQL_IN class is the official adapter for tuples starting from 2.0.6.
-class SQL_IN(object):
+class SQL_IN:
     """Adapt any iterable to an SQL quotable object."""
-
     def __init__(self, seq):
         self._seq = seq
         self._conn = None
@@ -192,22 +113,21 @@ class SQL_IN(object):
         pobjs = [adapt(o) for o in self._seq]
         if self._conn is not None:
             for obj in pobjs:
-                if hasattr(obj, "prepare"):
+                if hasattr(obj, 'prepare'):
                     obj.prepare(self._conn)
         qobjs = [o.getquoted() for o in pobjs]
-        return b"(" + b", ".join(qobjs) + b")"
+        return b'(' + b', '.join(qobjs) + b')'
 
     def __str__(self):
         return str(self.getquoted())
 
 
-class NoneAdapter(object):
+class NoneAdapter:
     """Adapt None to NULL.
 
     This adapter is not used normally as a fast path in mogrify uses NULL,
     but it makes easier to adapt composite types.
     """
-
     def __init__(self, obj):
         pass
 
@@ -218,7 +138,7 @@ class NoneAdapter(object):
 def make_dsn(dsn=None, **kwargs):
     """Convert a set of keywords into a connection strings."""
     if dsn is None and not kwargs:
-        return ""
+        return ''
 
     # If no kwarg is specified don't mung the dsn, but verify it
     if not kwargs:
@@ -226,10 +146,11 @@ def make_dsn(dsn=None, **kwargs):
         return dsn
 
     # Override the dsn with the parameters
-    if "database" in kwargs:
-        if "dbname" in kwargs:
-            raise TypeError("you can't specify both 'database' and 'dbname' arguments")
-        kwargs["dbname"] = kwargs.pop("database")
+    if 'database' in kwargs:
+        if 'dbname' in kwargs:
+            raise TypeError(
+                "you can't specify both 'database' and 'dbname' arguments")
+        kwargs['dbname'] = kwargs.pop('database')
 
     # Drop the None arguments
     kwargs = {k: v for (k, v) in kwargs.items() if v is not None}
@@ -239,7 +160,8 @@ def make_dsn(dsn=None, **kwargs):
         tmp.update(kwargs)
         kwargs = tmp
 
-    dsn = " ".join(["%s=%s" % (k, _param_escape(str(v))) for (k, v) in kwargs.items()])
+    dsn = " ".join(["{}={}".format(k, _param_escape(str(v)))
+        for (k, v) in kwargs.items()])
 
     # verify that the returned dsn is valid
     parse_dsn(dsn)
@@ -247,14 +169,16 @@ def make_dsn(dsn=None, **kwargs):
     return dsn
 
 
-def _param_escape(s, re_escape=_re.compile(r"([\\'])"), re_space=_re.compile(r"\s")):
+def _param_escape(s,
+        re_escape=_re.compile(r"([\\'])"),
+        re_space=_re.compile(r'\s')):
     """
     Apply the escaping rule required by PQconnectdb
     """
     if not s:
         return "''"
 
-    s = re_escape.sub(r"\\\1", s)
+    s = re_escape.sub(r'\\\1', s)
     if re_space.search(s):
         s = "'" + s + "'"
 
@@ -262,7 +186,7 @@ def _param_escape(s, re_escape=_re.compile(r"([\\'])"), re_space=_re.compile(r"\
 
 
 # Create default json typecasters for PostgreSQL 9.2 oids
-from psycopg2._json import register_default_json, register_default_jsonb  # noqa
+from psycopg2._json import register_default_json, register_default_jsonb    # noqa
 
 try:
     JSON, JSONARRAY = register_default_json()
@@ -274,8 +198,7 @@ del register_default_json, register_default_jsonb
 
 
 # Create default Range typecasters
-from psycopg2._range import Range  # noqa
-
+from psycopg2. _range import Range                              # noqa
 del Range
 
 
@@ -284,7 +207,7 @@ del Range
 # uppercase, so an encoding not respecting these rules wouldn't be found in the
 # encodings keys and would raise an exception with the unicode typecaster
 for k, v in list(encodings.items()):
-    k = k.replace("_", "").replace("-", "").upper()
+    k = k.replace('_', '').replace('-', '').upper()
     encodings[k] = v
 
 del k, v

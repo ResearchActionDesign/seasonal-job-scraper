@@ -5,7 +5,7 @@
 # psycopg/_range.py - Implementation of the Range type and adaptation
 #
 # Copyright (C) 2012-2019 Daniele Varrazzo  <daniele.varrazzo@gmail.com>
-# Copyright (C) 2020 The Psycopg Team
+# Copyright (C) 2020-2021 The Psycopg Team
 #
 # psycopg2 is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published
@@ -30,10 +30,9 @@ import re
 from psycopg2._psycopg import ProgrammingError, InterfaceError
 from psycopg2.extensions import ISQLQuote, adapt, register_adapter
 from psycopg2.extensions import new_type, new_array_type, register_type
-from psycopg2.compat import string_types
 
 
-class Range(object):
+class Range:
     """Python representation for a PostgreSQL |range|_ type.
 
     :param lower: lower bound for the range. `!None` means unbound
@@ -43,13 +42,12 @@ class Range(object):
     :param empty: if `!True`, the range is empty
 
     """
+    __slots__ = ('_lower', '_upper', '_bounds')
 
-    __slots__ = ("_lower", "_upper", "_bounds")
-
-    def __init__(self, lower=None, upper=None, bounds="[)", empty=False):
+    def __init__(self, lower=None, upper=None, bounds='[)', empty=False):
         if not empty:
-            if bounds not in ("[)", "(]", "()", "[]"):
-                raise ValueError("bound flags not valid: %r" % bounds)
+            if bounds not in ('[)', '(]', '()', '[]'):
+                raise ValueError(f"bound flags not valid: {bounds!r}")
 
             self._lower = lower
             self._upper = upper
@@ -59,27 +57,23 @@ class Range(object):
 
     def __repr__(self):
         if self._bounds is None:
-            return "%s(empty=True)" % self.__class__.__name__
+            return f"{self.__class__.__name__}(empty=True)"
         else:
-            return "%s(%r, %r, %r)" % (
-                self.__class__.__name__,
-                self._lower,
-                self._upper,
-                self._bounds,
-            )
+            return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__,
+                self._lower, self._upper, self._bounds)
 
     def __str__(self):
         if self._bounds is None:
-            return "empty"
+            return 'empty'
 
         items = [
             self._bounds[0],
             str(self._lower),
-            ", ",
+            ', ',
             str(self._upper),
-            self._bounds[1],
+            self._bounds[1]
         ]
-        return "".join(items)
+        return ''.join(items)
 
     @property
     def lower(self):
@@ -115,21 +109,21 @@ class Range(object):
         """`!True` if the lower bound is included in the range."""
         if self._bounds is None or self._lower is None:
             return False
-        return self._bounds[0] == "["
+        return self._bounds[0] == '['
 
     @property
     def upper_inc(self):
         """`!True` if the upper bound is included in the range."""
         if self._bounds is None or self._upper is None:
             return False
-        return self._bounds[1] == "]"
+        return self._bounds[1] == ']'
 
     def __contains__(self, x):
         if self._bounds is None:
             return False
 
         if self._lower is not None:
-            if self._bounds[0] == "[":
+            if self._bounds[0] == '[':
                 if x < self._lower:
                     return False
             else:
@@ -137,7 +131,7 @@ class Range(object):
                     return False
 
         if self._upper is not None:
-            if self._bounds[1] == "]":
+            if self._bounds[1] == ']':
                 if x > self._upper:
                     return False
             else:
@@ -149,18 +143,12 @@ class Range(object):
     def __bool__(self):
         return self._bounds is not None
 
-    def __nonzero__(self):
-        # Python 2 compatibility
-        return type(self).__bool__(self)
-
     def __eq__(self, other):
         if not isinstance(other, Range):
             return False
-        return (
-            self._lower == other._lower
+        return (self._lower == other._lower
             and self._upper == other._upper
-            and self._bounds == other._bounds
-        )
+            and self._bounds == other._bounds)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -175,7 +163,7 @@ class Range(object):
     def __lt__(self, other):
         if not isinstance(other, Range):
             return NotImplemented
-        for attr in ("_lower", "_upper", "_bounds"):
+        for attr in ('_lower', '_upper', '_bounds'):
             self_value = getattr(self, attr)
             other_value = getattr(other, attr)
             if self_value == other_value:
@@ -207,9 +195,8 @@ class Range(object):
             return self.__gt__(other)
 
     def __getstate__(self):
-        return {
-            slot: getattr(self, slot) for slot in self.__slots__ if hasattr(self, slot)
-        }
+        return {slot: getattr(self, slot)
+            for slot in self.__slots__ if hasattr(self, slot)}
 
     def __setstate__(self, state):
         for slot, value in state.items():
@@ -247,13 +234,12 @@ def register_range(pgrange, pyrange, conn_or_curs, globally=False):
     return caster
 
 
-class RangeAdapter(object):
+class RangeAdapter:
     """`ISQLQuote` adapter for `Range` subclasses.
 
     This is an abstract class: concrete classes must set a `name` class
     attribute or override `getquoted()`.
     """
-
     name = None
 
     def __init__(self, adapted):
@@ -269,50 +255,40 @@ class RangeAdapter(object):
     def getquoted(self):
         if self.name is None:
             raise NotImplementedError(
-                "RangeAdapter must be subclassed overriding its name "
-                "or the getquoted() method"
-            )
+                'RangeAdapter must be subclassed overriding its name '
+                'or the getquoted() method')
 
         r = self.adapted
         if r.isempty:
-            return b"'empty'::" + self.name.encode("utf8")
+            return b"'empty'::" + self.name.encode('utf8')
 
         if r.lower is not None:
             a = adapt(r.lower)
-            if hasattr(a, "prepare"):
+            if hasattr(a, 'prepare'):
                 a.prepare(self._conn)
             lower = a.getquoted()
         else:
-            lower = b"NULL"
+            lower = b'NULL'
 
         if r.upper is not None:
             a = adapt(r.upper)
-            if hasattr(a, "prepare"):
+            if hasattr(a, 'prepare'):
                 a.prepare(self._conn)
             upper = a.getquoted()
         else:
-            upper = b"NULL"
+            upper = b'NULL'
 
-        return (
-            self.name.encode("utf8")
-            + b"("
-            + lower
-            + b", "
-            + upper
-            + b", '"
-            + r._bounds.encode("utf8")
-            + b"')"
-        )
+        return self.name.encode('utf8') + b'(' + lower + b', ' + upper \
+            + b", '" + r._bounds.encode('utf8') + b"')"
 
 
-class RangeCaster(object):
+class RangeCaster:
     """Helper class to convert between `Range` and PostgreSQL range types.
 
     Objects of this class are usually created by `register_range()`. Manual
     creation could be useful if querying the database is not advisable: in
     this case the oids must be provided.
     """
-
     def __init__(self, pgrange, pyrange, oid, subtype_oid, array_oid=None):
         self.subtype_oid = subtype_oid
         self._create_ranges(pgrange, pyrange)
@@ -323,8 +299,7 @@ class RangeCaster(object):
 
         if array_oid is not None:
             self.array_typecaster = new_array_type(
-                (array_oid,), name + "ARRAY", self.typecaster
-            )
+                (array_oid,), name + "ARRAY", self.typecaster)
         else:
             self.array_typecaster = None
 
@@ -335,24 +310,24 @@ class RangeCaster(object):
         # an implementation detail and is not documented. It is currently used
         # for the numeric ranges.
         self.adapter = None
-        if isinstance(pgrange, string_types):
+        if isinstance(pgrange, str):
             self.adapter = type(pgrange, (RangeAdapter,), {})
             self.adapter.name = pgrange
         else:
             try:
-                if issubclass(pgrange, RangeAdapter) and pgrange is not RangeAdapter:
+                if issubclass(pgrange, RangeAdapter) \
+                        and pgrange is not RangeAdapter:
                     self.adapter = pgrange
             except TypeError:
                 pass
 
         if self.adapter is None:
             raise TypeError(
-                "pgrange must be a string or a RangeAdapter strict subclass"
-            )
+                'pgrange must be a string or a RangeAdapter strict subclass')
 
         self.range = None
         try:
-            if isinstance(pyrange, string_types):
+            if isinstance(pyrange, str):
                 self.range = type(pyrange, (Range,), {})
             if issubclass(pyrange, Range) and pyrange is not Range:
                 self.range = pyrange
@@ -360,7 +335,8 @@ class RangeCaster(object):
             pass
 
         if self.range is None:
-            raise TypeError("pyrange must be a type or a Range strict subclass")
+            raise TypeError(
+                'pyrange must be a type or a Range strict subclass')
 
     @classmethod
     def _from_db(self, name, pyrange, conn_or_curs):
@@ -370,60 +346,76 @@ class RangeCaster(object):
         """
         from psycopg2.extensions import STATUS_IN_TRANSACTION
         from psycopg2.extras import _solve_conn_curs
-
         conn, curs = _solve_conn_curs(conn_or_curs)
 
         if conn.info.server_version < 90200:
-            raise ProgrammingError(
-                "range types not available in version %s" % conn.info.server_version
-            )
+            raise ProgrammingError("range types not available in version %s"
+                % conn.info.server_version)
 
         # Store the transaction status of the connection to revert it after use
         conn_status = conn.status
 
         # Use the correct schema
-        if "." in name:
-            schema, tname = name.split(".", 1)
+        if '.' in name:
+            schema, tname = name.split('.', 1)
         else:
             tname = name
-            schema = "public"
+            schema = 'public'
 
         # get the type oid and attributes
-        try:
-            curs.execute(
-                """\
-select rngtypid, rngsubtype,
-    (select typarray from pg_type where oid = rngtypid)
+        curs.execute("""\
+select rngtypid, rngsubtype, typarray
 from pg_range r
 join pg_type t on t.oid = rngtypid
 join pg_namespace ns on ns.oid = typnamespace
 where typname = %s and ns.nspname = %s;
-""",
-                (tname, schema),
-            )
-
-        except ProgrammingError:
-            if not conn.autocommit:
-                conn.rollback()
-            raise
-        else:
-            rec = curs.fetchone()
-
-            # revert the status of the connection as before the command
-            if conn_status != STATUS_IN_TRANSACTION and not conn.autocommit:
-                conn.rollback()
+""", (tname, schema))
+        rec = curs.fetchone()
 
         if not rec:
-            raise ProgrammingError("PostgreSQL type '%s' not found" % name)
+            # The above algorithm doesn't work for customized seach_path
+            # (#1487) The implementation below works better, but, to guarantee
+            # backwards compatibility, use it only if the original one failed.
+            try:
+                savepoint = False
+                # Because we executed statements earlier, we are either INTRANS
+                # or we are IDLE only if the transaction is autocommit, in
+                # which case we don't need the savepoint anyway.
+                if conn.status == STATUS_IN_TRANSACTION:
+                    curs.execute("SAVEPOINT register_type")
+                    savepoint = True
 
-        type, subtype, array = rec
+                curs.execute("""\
+SELECT rngtypid, rngsubtype, typarray, typname, nspname
+from pg_range r
+join pg_type t on t.oid = rngtypid
+join pg_namespace ns on ns.oid = typnamespace
+WHERE t.oid = %s::regtype
+""", (name, ))
+            except ProgrammingError:
+                pass
+            else:
+                rec = curs.fetchone()
+                if rec:
+                    tname, schema = rec[3:]
+            finally:
+                if savepoint:
+                    curs.execute("ROLLBACK TO SAVEPOINT register_type")
 
-        return RangeCaster(
-            name, pyrange, oid=type, subtype_oid=subtype, array_oid=array
-        )
+        # revert the status of the connection as before the command
+        if conn_status != STATUS_IN_TRANSACTION and not conn.autocommit:
+            conn.rollback()
 
-    _re_range = re.compile(
-        r"""
+        if not rec:
+            raise ProgrammingError(
+                f"PostgreSQL range '{name}' not found")
+
+        type, subtype, array = rec[:3]
+
+        return RangeCaster(name, pyrange,
+            oid=type, subtype_oid=subtype, array_oid=array)
+
+    _re_range = re.compile(r"""
         ( \(|\[ )                   # lower bound flag
         (?:                         # lower bound:
           " ( (?: [^"] | "")* ) "   #   - a quoted string
@@ -435,9 +427,7 @@ where typname = %s and ns.nspname = %s;
           | ( [^"\)\]]+ )           #   - or an unquoted string
         )?                          #   - or empty (not catched)
         ( \)|\] )                   # upper bound flag
-        """,
-        re.VERBOSE,
-    )
+        """, re.VERBOSE)
 
     _re_undouble = re.compile(r'(["\\])\1')
 
@@ -445,12 +435,12 @@ where typname = %s and ns.nspname = %s;
         if s is None:
             return None
 
-        if s == "empty":
+        if s == 'empty':
             return self.range(empty=True)
 
         m = self._re_range.match(s)
         if m is None:
-            raise InterfaceError("failed to parse range: '%s'" % s)
+            raise InterfaceError(f"failed to parse range: '{s}'")
 
         lower = m.group(3)
         if lower is None:
@@ -486,25 +476,21 @@ class NumericRange(Range):
     PostgreSQL types :sql:`int4range`, :sql:`int8range`, :sql:`numrange` are
     casted into `!NumericRange` instances.
     """
-
     pass
 
 
 class DateRange(Range):
     """Represents :sql:`daterange` values."""
-
     pass
 
 
 class DateTimeRange(Range):
     """Represents :sql:`tsrange` values."""
-
     pass
 
 
 class DateTimeTZRange(Range):
     """Represents :sql:`tstzrange` values."""
-
     pass
 
 
@@ -513,10 +499,8 @@ class DateTimeTZRange(Range):
 # pointless in Python world. On the way back, no numeric range is casted to
 # NumericRange, but only to their subclasses
 
-
 class NumberRangeAdapter(RangeAdapter):
     """Adapt a range if the subtype doesn't need quotes."""
-
     def getquoted(self):
         r = self.adapted
         if r.isempty:
@@ -527,18 +511,16 @@ class NumberRangeAdapter(RangeAdapter):
             # quoted (they are numbers). Also, I'm lazy and not preparing the
             # adapter because I assume encoding doesn't matter for these
             # objects.
-            lower = adapt(r.lower).getquoted().decode("ascii")
+            lower = adapt(r.lower).getquoted().decode('ascii')
         else:
-            lower = ""
+            lower = ''
 
         if not r.upper_inf:
-            upper = adapt(r.upper).getquoted().decode("ascii")
+            upper = adapt(r.upper).getquoted().decode('ascii')
         else:
-            upper = ""
+            upper = ''
 
-        return ("'%s%s,%s%s'" % (r._bounds[0], lower, upper, r._bounds[1])).encode(
-            "ascii"
-        )
+        return (f"'{r._bounds[0]}{lower},{upper}{r._bounds[1]}'").encode('ascii')
 
 
 # TODO: probably won't work with infs, nans and other tricky cases.
@@ -547,32 +529,26 @@ register_adapter(NumericRange, NumberRangeAdapter)
 # Register globally typecasters and adapters for builtin range types.
 
 # note: the adapter is registered more than once, but this is harmless.
-int4range_caster = RangeCaster(
-    NumberRangeAdapter, NumericRange, oid=3904, subtype_oid=23, array_oid=3905
-)
+int4range_caster = RangeCaster(NumberRangeAdapter, NumericRange,
+    oid=3904, subtype_oid=23, array_oid=3905)
 int4range_caster._register()
 
-int8range_caster = RangeCaster(
-    NumberRangeAdapter, NumericRange, oid=3926, subtype_oid=20, array_oid=3927
-)
+int8range_caster = RangeCaster(NumberRangeAdapter, NumericRange,
+    oid=3926, subtype_oid=20, array_oid=3927)
 int8range_caster._register()
 
-numrange_caster = RangeCaster(
-    NumberRangeAdapter, NumericRange, oid=3906, subtype_oid=1700, array_oid=3907
-)
+numrange_caster = RangeCaster(NumberRangeAdapter, NumericRange,
+    oid=3906, subtype_oid=1700, array_oid=3907)
 numrange_caster._register()
 
-daterange_caster = RangeCaster(
-    "daterange", DateRange, oid=3912, subtype_oid=1082, array_oid=3913
-)
+daterange_caster = RangeCaster('daterange', DateRange,
+    oid=3912, subtype_oid=1082, array_oid=3913)
 daterange_caster._register()
 
-tsrange_caster = RangeCaster(
-    "tsrange", DateTimeRange, oid=3908, subtype_oid=1114, array_oid=3909
-)
+tsrange_caster = RangeCaster('tsrange', DateTimeRange,
+    oid=3908, subtype_oid=1114, array_oid=3909)
 tsrange_caster._register()
 
-tstzrange_caster = RangeCaster(
-    "tstzrange", DateTimeTZRange, oid=3910, subtype_oid=1184, array_oid=3911
-)
+tstzrange_caster = RangeCaster('tstzrange', DateTimeTZRange,
+    oid=3910, subtype_oid=1184, array_oid=3911)
 tstzrange_caster._register()
