@@ -30,9 +30,11 @@ def listing_to_row(listing, fieldnames):
     }
 
     return {
-        field: non_scraped_data[field]
-        if field in non_scraped_fields_base
-        else (listing.scraped_data[field] if listing.scraped_data else "")
+        field: (
+            non_scraped_data[field]
+            if field in non_scraped_fields_base
+            else (listing.scraped_data[field] if listing.scraped_data else "")
+        )
         for field in fieldnames
     }
 
