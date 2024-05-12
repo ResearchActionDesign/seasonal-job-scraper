@@ -5,7 +5,7 @@ This module implements thread-safe (and not) connection pools.
 # psycopg/pool.py - pooling code for psycopg
 #
 # Copyright (C) 2003-2019 Federico Di Gregorio  <fog@debian.org>
-# Copyright (C) 2020 The Psycopg Team
+# Copyright (C) 2020-2021 The Psycopg Team
 #
 # psycopg2 is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published
@@ -33,7 +33,7 @@ class PoolError(psycopg2.Error):
     pass
 
 
-class AbstractConnectionPool(object):
+class AbstractConnectionPool:
     """Generic key-based pooling code."""
 
     def __init__(self, minconn, maxconn, *args, **kwargs):
@@ -52,7 +52,7 @@ class AbstractConnectionPool(object):
 
         self._pool = []
         self._used = {}
-        self._rused = {}  # id(conn) -> key map
+        self._rused = {}    # id(conn) -> key map
         self._keys = 0
 
         for i in range(self.minconn):
@@ -158,8 +158,8 @@ class ThreadedConnectionPool(AbstractConnectionPool):
     def __init__(self, minconn, maxconn, *args, **kwargs):
         """Initialize the threading lock."""
         import threading
-
-        AbstractConnectionPool.__init__(self, minconn, maxconn, *args, **kwargs)
+        AbstractConnectionPool.__init__(
+            self, minconn, maxconn, *args, **kwargs)
         self._lock = threading.Lock()
 
     def getconn(self, key=None):

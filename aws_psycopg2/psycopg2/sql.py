@@ -4,7 +4,7 @@
 # psycopg/sql.py - SQL composition utility module
 #
 # Copyright (C) 2016-2019 Daniele Varrazzo  <daniele.varrazzo@gmail.com>
-# Copyright (C) 2020 The Psycopg Team
+# Copyright (C) 2020-2021 The Psycopg Team
 #
 # psycopg2 is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published
@@ -27,13 +27,12 @@
 import string
 
 from psycopg2 import extensions as ext
-from psycopg2.compat import PY3, string_types
 
 
 _formatter = string.Formatter()
 
 
-class Composable(object):
+class Composable:
     """
     Abstract base class for objects that can be used to compose an SQL string.
 
@@ -47,12 +46,11 @@ class Composable(object):
     `!Composed` instance containing the left argument repeated as many times as
     requested.
     """
-
     def __init__(self, wrapped):
         self._wrapped = wrapped
 
     def __repr__(self):
-        return "%s(%r)" % (self.__class__.__name__, self._wrapped)
+        return f"{self.__class__.__name__}({self._wrapped!r})"
 
     def as_string(self, context):
         """
@@ -103,17 +101,15 @@ class Composed(Composable):
     `!Composed` objects are iterable (so they can be used in `SQL.join` for
     instance).
     """
-
     def __init__(self, seq):
         wrapped = []
         for i in seq:
             if not isinstance(i, Composable):
                 raise TypeError(
-                    "Composed elements must be Composable, got %r instead" % i
-                )
+                    f"Composed elements must be Composable, got {i!r} instead")
             wrapped.append(i)
 
-        super(Composed, self).__init__(wrapped)
+        super().__init__(wrapped)
 
     @property
     def seq(self):
@@ -124,7 +120,7 @@ class Composed(Composable):
         rv = []
         for i in self._wrapped:
             rv.append(i.as_string(context))
-        return "".join(rv)
+        return ''.join(rv)
 
     def __iter__(self):
         return iter(self._wrapped)
@@ -151,10 +147,11 @@ class Composed(Composable):
             "foo", "bar"
 
         """
-        if isinstance(joiner, string_types):
+        if isinstance(joiner, str):
             joiner = SQL(joiner)
         elif not isinstance(joiner, SQL):
-            raise TypeError("Composed.join() argument must be a string or an SQL")
+            raise TypeError(
+                "Composed.join() argument must be a string or an SQL")
 
         return joiner.join(self)
 
@@ -181,11 +178,10 @@ class SQL(Composable):
         >>> print(query.as_string(conn))
         select "foo", "bar" from "table"
     """
-
     def __init__(self, string):
-        if not isinstance(string, string_types):
+        if not isinstance(string, str):
             raise TypeError("SQL values must be strings")
-        super(SQL, self).__init__(string)
+        super().__init__(string)
 
     @property
     def string(self):
@@ -243,16 +239,14 @@ class SQL(Composable):
             if name.isdigit():
                 if autonum:
                     raise ValueError(
-                        "cannot switch from automatic field numbering to manual"
-                    )
+                        "cannot switch from automatic field numbering to manual")
                 rv.append(args[int(name)])
                 autonum = None
 
             elif not name:
                 if autonum is None:
                     raise ValueError(
-                        "cannot switch from manual field numbering to automatic"
-                    )
+                        "cannot switch from manual field numbering to automatic")
                 rv.append(args[autonum])
                 autonum += 1
 
@@ -324,16 +318,15 @@ class Identifier(Composable):
         select "table"."field" from "schema"."table"
 
     """
-
     def __init__(self, *strings):
         if not strings:
             raise TypeError("Identifier cannot be empty")
 
         for s in strings:
-            if not isinstance(s, string_types):
+            if not isinstance(s, str):
                 raise TypeError("SQL identifier parts must be strings")
 
-        super(Identifier, self).__init__(strings)
+        super().__init__(strings)
 
     @property
     def strings(self):
@@ -347,13 +340,14 @@ class Identifier(Composable):
         if len(self._wrapped) == 1:
             return self._wrapped[0]
         else:
-            raise AttributeError("the Identifier wraps more than one than one string")
+            raise AttributeError(
+                "the Identifier wraps more than one than one string")
 
     def __repr__(self):
-        return "%s(%s)" % (self.__class__.__name__, ", ".join(map(repr, self._wrapped)))
+        return f"{self.__class__.__name__}({', '.join(map(repr, self._wrapped))})"
 
     def as_string(self, context):
-        return ".".join(ext.quote_ident(s, context) for s in self._wrapped)
+        return '.'.join(ext.quote_ident(s, context) for s in self._wrapped)
 
 
 class Literal(Composable):
@@ -376,7 +370,6 @@ class Literal(Composable):
         'foo', 'ba''r', 42
 
     """
-
     @property
     def wrapped(self):
         """The object wrapped by the `!Literal`."""
@@ -392,11 +385,11 @@ class Literal(Composable):
             raise TypeError("context must be a connection or a cursor")
 
         a = ext.adapt(self._wrapped)
-        if hasattr(a, "prepare"):
+        if hasattr(a, 'prepare'):
             a.prepare(conn)
 
         rv = a.getquoted()
-        if PY3 and isinstance(rv, bytes):
+        if isinstance(rv, bytes):
             rv = rv.decode(ext.encodings[conn.encoding])
 
         return rv
@@ -430,14 +423,14 @@ class Placeholder(Composable):
     """
 
     def __init__(self, name=None):
-        if isinstance(name, string_types):
-            if ")" in name:
-                raise ValueError("invalid name: %r" % name)
+        if isinstance(name, str):
+            if ')' in name:
+                raise ValueError(f"invalid name: {name!r}")
 
         elif name is not None:
-            raise TypeError("expected string or None as name, got %r" % name)
+            raise TypeError(f"expected string or None as name, got {name!r}")
 
-        super(Placeholder, self).__init__(name)
+        super().__init__(name)
 
     @property
     def name(self):
@@ -445,11 +438,14 @@ class Placeholder(Composable):
         return self._wrapped
 
     def __repr__(self):
-        return "Placeholder(%r)" % (self._wrapped if self._wrapped is not None else "",)
+        if self._wrapped is None:
+            return f"{self.__class__.__name__}()"
+        else:
+            return f"{self.__class__.__name__}({self._wrapped!r})"
 
     def as_string(self, context):
         if self._wrapped is not None:
-            return "%%(%s)s" % self._wrapped
+            return f"%({self._wrapped})s"
         else:
             return "%s"
 
