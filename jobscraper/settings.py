@@ -65,7 +65,7 @@ if USE_AWS and USE_AWS != "False":
     AWS_SESSION_TOKEN = os.getenv("AWS_SESSION_TOKEN", "")
     AWS_DEFAULT_ACL = None
     AWS_QUERYSTRING_AUTH = False
-    AWS_S3_REGION_NAME = 'us-east-2'
+    AWS_S3_REGION_NAME = "us-east-2"
 
     DATABASES = {
         "default": {

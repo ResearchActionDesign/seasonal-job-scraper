@@ -1,6 +1,7 @@
 import os
 import django
 
+
 def get_stats():
     django.setup()
 
