@@ -70,8 +70,12 @@ class Command(BaseCommand):
                 continue
 
             try:
-                scraped_data = api_response.json()["value"][0]
-            except ValueError:
+                scraped_data_package = api_response.json()["value"]
+                if len(scraped_data_package) == 1:
+                    scraped_data = scraped_data_package[0]
+                else:
+                    continue
+            except ValueError or IndexError:
                 msg = f"Invalid JSON"
                 self.stdout.write(self.style.ERROR(msg))
                 rollbar.report_message(

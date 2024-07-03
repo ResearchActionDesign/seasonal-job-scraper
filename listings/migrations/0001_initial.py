@@ -35,7 +35,9 @@ class Migration(migrations.Migration):
                 ("scraped_data", models.JSONField(null=True)),
                 ("pdf", models.FileField(null=True, upload_to="job_pdfs/")),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
             bases=(dirtyfields.dirtyfields.DirtyFieldsMixin, models.Model),
         ),
     ]
